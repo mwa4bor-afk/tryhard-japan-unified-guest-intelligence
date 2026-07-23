@@ -40,7 +40,9 @@ const requiredFiles = [
   '87_ValidationService.gs',
   '88_ValidationEntrypoints.gs',
   '89_GoLiveService.gs',
-  '90_GoLiveEntrypoints.gs'
+  '90_GoLiveEntrypoints.gs',
+  '91_BusinessContinuityService.gs',
+  '92_BusinessContinuityEntrypoints.gs'
 ];
 
 requiredFiles.forEach((name) => {
@@ -83,7 +85,10 @@ if (fs.existsSync(src)) {
     'runTryHardPlatformValidation',
     'runTryHardGoLivePreflight',
     'beginTryHardGoLive',
-    'verifyTryHardGoLive'
+    'verifyTryHardGoLive',
+    'initializeTryHardBusinessContinuity',
+    'beginTryHardRecoveryDrill',
+    'completeTryHardRecoveryDrill'
   ];
   entrypoints.forEach((fn) => {
     const matches = combined.match(new RegExp(`function\\s+${fn}\\s*\\(`, 'g')) || [];
@@ -126,7 +131,8 @@ if (fs.existsSync(src)) {
     'SchemaMigrationService',
     'ReleaseGovernanceService',
     'ValidationService',
-    'GoLiveService'
+    'GoLiveService',
+    'BusinessContinuityService'
   ].forEach((service) => {
     if (!new RegExp(`TGI\\.${service}\\s*=`).test(combined)) fail(`Missing service registration: TGI.${service}`);
   });
