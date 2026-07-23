@@ -30,7 +30,7 @@ TGI.ReservationImportService = (function () {
     return TGI.GuestRepository.save({first_name:first,last_name:last,email:reservation.email,phone:reservation.phone,source:'RESERVATION_IMPORT',notes:'Created from reservation import.'});
   }
   function importRows(rows, options) {
-    TGI.AccessControlService.requirePermission('MANAGE_OPERATIONS');
+    TGI.AccessControlService.requirePermission('reservations.import');
     options=options||{}; var mapping=options.mapping||{}, source=options.source||'CSV', existing=records_(), seen={};
     existing.forEach(function(r){if(r.external_id)seen[source+'|'+r.external_id]=true;});
     var started=new Date(), created=0, skipped=0, failed=0, errors=[], sheet=ensure_(SHEET,HEADERS);
