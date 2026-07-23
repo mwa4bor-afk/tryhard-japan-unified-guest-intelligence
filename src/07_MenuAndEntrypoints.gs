@@ -14,6 +14,11 @@ function onOpen() {
     .addItem('Show guest segment summary', 'showTryHardSegmentSummary')
     .addItem('Install scheduled automations', 'installTryHardAutomations')
     .addSeparator()
+    .addItem('Rebuild admin console', 'rebuildTryHardAdminConsole')
+    .addItem('Create workbook backup', 'createTryHardBackup')
+    .addItem('Review retention candidates', 'reviewTryHardRetention')
+    .addItem('Show access roles', 'showTryHardAccessRoles')
+    .addSeparator()
     .addItem('Run production smoke test', 'runTryHardSmokeTest')
     .addItem('Seed demonstration data', 'seedTryHardTestData')
     .addItem('Show runtime configuration', 'showTryHardConfiguration')
@@ -28,6 +33,7 @@ function onOpen() {
 
 function installTryHardGuestIntelligence() {
   var result = TGI.WorkbookInstaller.install();
+  TGI.AccessControlService.bootstrap();
   SpreadsheetApp.getUi().alert(TGI.APP_NAME, 'Installation complete.\nSchema version: ' + result.schemaVersion, SpreadsheetApp.getUi().ButtonSet.OK);
   return result;
 }
@@ -47,9 +53,7 @@ function installTryHardFormTriggers() {
 
 function showTryHardFormLinks() {
   var registry = TGI.FormBuilder.getRegistry();
-  var lines = Object.keys(registry).sort().map(function (key) {
-    return registry[key].title + '\nPublic: ' + registry[key].publishedUrl + '\nEdit: ' + registry[key].editUrl;
-  });
+  var lines = Object.keys(registry).sort().map(function (key) { return registry[key].title + '\nPublic: ' + registry[key].publishedUrl + '\nEdit: ' + registry[key].editUrl; });
   SpreadsheetApp.getUi().alert(TGI.APP_NAME, lines.length ? lines.join('\n\n') : 'No forms are registered. Create the forms first.', SpreadsheetApp.getUi().ButtonSet.OK);
   return registry;
 }
@@ -85,6 +89,32 @@ function installTryHardAutomations() {
   return triggers;
 }
 
+function rebuildTryHardAdminConsole() {
+  var report = TGI.AdminConsoleService.rebuild();
+  SpreadsheetApp.getUi().alert(TGI.APP_NAME, 'Admin console rebuilt.\nRetention candidates: ' + report.privacy_candidates + '\nAuthorized users: ' + report.roles.length, SpreadsheetApp.getUi().ButtonSet.OK);
+  return report;
+}
+
+function createTryHardBackup() {
+  var backup = TGI.BackupService.createSnapshot();
+  SpreadsheetApp.getUi().alert(TGI.APP_NAME, 'Backup created:\n' + backup.name + '\n' + backup.url, SpreadsheetApp.getUi().ButtonSet.OK);
+  return backup;
+}
+
+function reviewTryHardRetention() {
+  var report = TGI.PrivacyService.review();
+  var lines = report.candidates.slice(0, 20).map(function (item) { return item.guest_id + ' — ' + item.last_activity; });
+  SpreadsheetApp.getUi().alert(TGI.APP_NAME, 'Retention period: ' + report.retention_days + ' days\nCandidates: ' + report.candidates.length + (lines.length ? '\n\n' + lines.join('\n') : ''), SpreadsheetApp.getUi().ButtonSet.OK);
+  return report;
+}
+
+function showTryHardAccessRoles() {
+  var roles = TGI.AccessControlService.summary();
+  var lines = roles.map(function (entry) { return entry.email + ': ' + entry.role; });
+  SpreadsheetApp.getUi().alert(TGI.APP_NAME, lines.length ? lines.join('\n') : 'No access roles configured.', SpreadsheetApp.getUi().ButtonSet.OK);
+  return roles;
+}
+
 function runTryHardSmokeTest() {
   var report = TGI.SmokeTestService.run();
   var failures = report.tests.filter(function (test) { return !test.passed; }).map(function (test) { return test.name; });
@@ -111,9 +141,10 @@ function validateTryHardInstallation() {
   var triggerCount = TGI.TriggerManager.listManagedTriggers().length;
   var automationCount = TGI.AutomationService.list().length;
   var config = TGI.ConfigService.validate();
-  var message = (report.valid ? 'Workbook data integrity is valid.' : 'Workbook integrity issues were found.') + '\nConfiguration valid: ' + config.valid + '\nRegistered forms: ' + Object.keys(registry).length + '\nManaged form triggers: ' + triggerCount + '\nScheduled automations: ' + automationCount;
+  var roles = TGI.AccessControlService.summary();
+  var message = (report.valid ? 'Workbook data integrity is valid.' : 'Workbook integrity issues were found.') + '\nConfiguration valid: ' + config.valid + '\nRegistered forms: ' + Object.keys(registry).length + '\nManaged form triggers: ' + triggerCount + '\nScheduled automations: ' + automationCount + '\nAuthorized users: ' + roles.length;
   SpreadsheetApp.getUi().alert(TGI.APP_NAME, message, SpreadsheetApp.getUi().ButtonSet.OK);
-  return { valid: report.valid && config.valid, integrity: report, configuration: config, formCount: Object.keys(registry).length, triggerCount: triggerCount, automationCount: automationCount };
+  return { valid: report.valid && config.valid, integrity: report, configuration: config, formCount: Object.keys(registry).length, triggerCount: triggerCount, automationCount: automationCount, accessRoles: roles };
 }
 
 function runTryHardIntegrityCheck() {
