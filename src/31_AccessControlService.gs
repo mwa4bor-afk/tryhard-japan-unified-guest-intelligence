@@ -3,8 +3,8 @@ TGI.AccessControlService = (function () {
   var ROLES = { ADMIN: 'ADMIN', MANAGER: 'MANAGER', OPERATOR: 'OPERATOR', VIEWER: 'VIEWER' };
   var PERMISSIONS = {
     ADMIN: ['*'],
-    MANAGER: ['dashboard.rebuild', 'dashboard.view', 'insights.generate', 'insights.view', 'tasks.manage', 'guests.merge', 'exports.create', 'privacy.review', 'operations.manage', 'reservations.import', 'reports.view'],
-    OPERATOR: ['tasks.manage', 'contacts.create', 'guests.edit', 'insights.view', 'reservations.import', 'reports.view'],
+    MANAGER: ['dashboard.rebuild', 'dashboard.view', 'insights.generate', 'insights.view', 'tasks.manage', 'guests.merge', 'exports.create', 'privacy.review', 'operations.manage', 'reservations.import', 'reports.view', 'integrations.manage', 'integrations.enqueue', 'integrations.process'],
+    OPERATOR: ['tasks.manage', 'contacts.create', 'guests.edit', 'insights.view', 'reservations.import', 'reports.view', 'integrations.enqueue'],
     VIEWER: ['dashboard.view', 'insights.view', 'reports.view']
   };
 
