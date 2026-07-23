@@ -14,7 +14,7 @@ TGI.StaffService = (function () {
     });
   }
   function save(input) {
-    TGI.AccessControlService.requirePermission('MANAGE_OPERATIONS');
+    TGI.AccessControlService.requirePermission('operations.manage');
     TGI.Util.assert(input && input.email, 'Staff email is required.');
     TGI.Util.assert(input.name, 'Staff name is required.');
     var now = new Date();
