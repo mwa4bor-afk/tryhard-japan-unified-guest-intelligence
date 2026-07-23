@@ -10,6 +10,10 @@ function onOpen() {
     .addItem('Rebuild management dashboards', 'rebuildTryHardDashboards')
     .addItem('Show KPI snapshot', 'showTryHardKpiSnapshot')
     .addSeparator()
+    .addItem('Generate guest intelligence', 'generateTryHardGuestIntelligence')
+    .addItem('Show guest segment summary', 'showTryHardSegmentSummary')
+    .addItem('Install scheduled automations', 'installTryHardAutomations')
+    .addSeparator()
     .addItem('Run data-integrity check', 'runTryHardIntegrityCheck')
     .addItem('Find duplicate guest candidates', 'showTryHardDuplicateCandidates')
     .addSeparator()
@@ -75,14 +79,44 @@ function showTryHardKpiSnapshot() {
   return kpi;
 }
 
+function generateTryHardGuestIntelligence() {
+  var insights = TGI.GuestIntelligenceService.generateAll();
+  SpreadsheetApp.getUi().alert(TGI.APP_NAME, insights.length + ' guest insights generated or refreshed.', SpreadsheetApp.getUi().ButtonSet.OK);
+  return insights;
+}
+
+function showTryHardSegmentSummary() {
+  var summary = TGI.GuestSegmentationService.summary();
+  var lines = Object.keys(summary).sort().map(function (segment) {
+    return segment + ': ' + summary[segment];
+  });
+  SpreadsheetApp.getUi().alert(TGI.APP_NAME, lines.length ? lines.join('\n') : 'No guests available for segmentation.', SpreadsheetApp.getUi().ButtonSet.OK);
+  return summary;
+}
+
+function installTryHardAutomations() {
+  var triggers = TGI.AutomationService.install();
+  SpreadsheetApp.getUi().alert(TGI.APP_NAME, triggers.length + ' scheduled automation triggers installed.', SpreadsheetApp.getUi().ButtonSet.OK);
+  return triggers;
+}
+
 function validateTryHardInstallation() {
   var report = TGI.DataIntegrityService.validate();
   var registry = TGI.FormBuilder.getRegistry();
   var triggerCount = TGI.TriggerManager.listManagedTriggers().length;
+  var automationCount = TGI.AutomationService.list().length;
   var message = (report.valid ? 'Workbook data integrity is valid.' : 'Workbook integrity issues were found.') +
-    '\nRegistered forms: ' + Object.keys(registry).length + '\nManaged form triggers: ' + triggerCount;
+    '\nRegistered forms: ' + Object.keys(registry).length +
+    '\nManaged form triggers: ' + triggerCount +
+    '\nScheduled automations: ' + automationCount;
   SpreadsheetApp.getUi().alert(TGI.APP_NAME, message, SpreadsheetApp.getUi().ButtonSet.OK);
-  return { valid: report.valid, integrity: report, formCount: Object.keys(registry).length, triggerCount: triggerCount };
+  return {
+    valid: report.valid,
+    integrity: report,
+    formCount: Object.keys(registry).length,
+    triggerCount: triggerCount,
+    automationCount: automationCount
+  };
 }
 
 function runTryHardIntegrityCheck() {
