@@ -10,6 +10,10 @@ function onOpen() {
     .addItem('Rebuild management dashboards', 'rebuildTryHardDashboards')
     .addItem('Show KPI snapshot', 'showTryHardKpiSnapshot')
     .addSeparator()
+    .addItem('Initialize enterprise operations', 'initializeTryHardEnterpriseOperations')
+    .addItem('Rebuild executive operations dashboard', 'rebuildTryHardEnterpriseDashboard')
+    .addItem('Show enterprise operations summary', 'showTryHardEnterpriseSummary')
+    .addSeparator()
     .addItem('Generate guest intelligence', 'generateTryHardGuestIntelligence')
     .addItem('Show guest segment summary', 'showTryHardSegmentSummary')
     .addItem('Install scheduled automations', 'installTryHardAutomations')
@@ -68,6 +72,32 @@ function showTryHardKpiSnapshot() {
   var kpi = TGI.KpiService.snapshot();
   SpreadsheetApp.getUi().alert(TGI.APP_NAME, 'Guests: ' + kpi.total_guests + '\nStays: ' + kpi.total_stays + '\nTotal spend: ¥' + Math.round(kpi.total_spend).toLocaleString() + '\nAverage rating: ' + kpi.average_rating.toFixed(2) + '\nNPS: ' + kpi.nps.toFixed(1) + '\nRecovery rate: ' + (kpi.service_recovery_rate * 100).toFixed(1) + '%\nOpen tasks: ' + kpi.open_tasks + '\nOverdue tasks: ' + kpi.overdue_tasks, SpreadsheetApp.getUi().ButtonSet.OK);
   return kpi;
+}
+
+function initializeTryHardEnterpriseOperations() {
+  TGI.LocationService.ensureSheet();
+  TGI.StaffService.ensureSheet();
+  TGI.ReservationImportService.ensureSheets();
+  var report = TGI.EnterpriseReportingService.rebuild();
+  SpreadsheetApp.getUi().alert(TGI.APP_NAME, 'Enterprise operations initialized.\nLocations: ' + report.locations + '\nStaff: ' + report.staff + '\nReservations: ' + report.reservations, SpreadsheetApp.getUi().ButtonSet.OK);
+  return report;
+}
+
+function rebuildTryHardEnterpriseDashboard() {
+  var report = TGI.EnterpriseReportingService.rebuild();
+  SpreadsheetApp.getUi().alert(TGI.APP_NAME, 'Executive operations dashboard rebuilt.\nLocations: ' + report.locations + '\nStaff: ' + report.staff + '\nReservations: ' + report.reservations, SpreadsheetApp.getUi().ButtonSet.OK);
+  return report;
+}
+
+function showTryHardEnterpriseSummary() {
+  TGI.AccessControlService.requirePermission('reports.view');
+  var locations = TGI.LocationService.all();
+  var staff = TGI.StaffService.all();
+  var reservations = TGI.ReservationImportService.all();
+  var value = reservations.reduce(function (sum, row) { return sum + Number(row.total_value || 0); }, 0);
+  var summary = { locations: locations.length, active_locations: TGI.LocationService.active().length, staff: staff.length, reservations: reservations.length, reservation_value: value };
+  SpreadsheetApp.getUi().alert(TGI.APP_NAME, 'Locations: ' + summary.locations + '\nActive locations: ' + summary.active_locations + '\nStaff: ' + summary.staff + '\nReservations: ' + summary.reservations + '\nReservation value: ¥' + Math.round(summary.reservation_value).toLocaleString(), SpreadsheetApp.getUi().ButtonSet.OK);
+  return summary;
 }
 
 function generateTryHardGuestIntelligence() {
