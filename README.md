@@ -1,44 +1,73 @@
 # TryHard Japan Unified Guest Intelligence
 
-Google Apps Script platform for unified post-visit guest feedback, CRM records, preferences, service recovery, loyalty intelligence, and operational reporting across TryHard Japan locations.
+Google Apps Script CRM platform for unified post-visit guest feedback, guest profiles, preferences, service recovery, loyalty intelligence, operational reporting, and automated follow-up across TryHard Japan locations.
 
-## Current scope
+## Included capabilities
 
-This repository currently provides:
+- five automatically generated Google Forms
+- one canonical Google Sheets CRM workbook
+- deterministic guest identity resolution
+- duplicate detection and guest merging
+- stays, preferences, loyalty, contacts, tasks, and audit history
+- service-recovery workflows
+- guest segmentation and rule-based next-best-action insights
+- KPI aggregation and management dashboards
+- scheduled dashboard, integrity, insight, and overdue-task processing
+- repeatable demonstration data and production smoke tests
+- `clasp` deployment tooling and GitHub Actions validation
 
-- Apps Script project configuration
-- Canonical workbook schema
-- Idempotent workbook installer
-- Guest domain validation and normalization
-- Spreadsheet-backed guest repository
-- Audit logging
-- Custom spreadsheet menu
+## Quick deployment
 
-## Setup
+```bash
+npm install
+cp .clasp.json.example .clasp.json
+# Add the target Apps Script project ID to .clasp.json
+npm run login
+npm run push
+```
 
-1. Create or choose a Google Spreadsheet that will be the unified workbook.
-2. Create a standalone Apps Script project or bind a script to the workbook.
-3. Copy the files under `src/` into Apps Script, or deploy with `clasp`.
-4. Run `installTryHardGuestIntelligence()` once and authorize the requested scopes.
-5. Reload the workbook and use **TryHard Guest Intelligence** from the custom menu.
+In Apps Script, run:
 
-For `clasp`, copy `.clasp.json.template` to `.clasp.json` and replace the placeholder script ID.
+1. `installTryHardGuestIntelligence`
+2. `createTryHardForms`
+3. `installTryHardFormTriggers`
+4. `installTryHardAutomations`
+5. `rebuildTryHardDashboards`
+6. `runTryHardProductionSmokeTest`
 
-## Architecture
+Reload the workbook and use the **TryHard Guest Intelligence** menu.
 
-- `src/00_Namespace.gs` — namespace and constants
-- `src/01_Utilities.gs` — normalization, validation, date, ID, and locking helpers
-- `src/02_Schema.gs` — canonical workbook schema
-- `src/03_WorkbookInstaller.gs` — idempotent workbook creation and formatting
-- `src/04_AuditLog.gs` — structured audit records
-- `src/05_GuestModel.gs` — guest domain model
-- `src/06_GuestRepository.gs` — spreadsheet persistence and duplicate detection
-- `src/07_MenuAndEntrypoints.gs` — installer, menu, and user entrypoints
+See [`docs/deployment.md`](docs/deployment.md) for the complete production runbook.
+
+## Repository structure
+
+- `src/00–07` — namespace, utilities, schema, installer, audit, guest model, repository, and menu
+- `src/08–11` — form definitions, creation, submission routing, and trigger management
+- `src/12–17` — shared repositories and CRM business services
+- `src/18–22` — guest merging, task/contact operations, duplicate detection, and integrity checks
+- `src/23–24` — KPI aggregation and dashboard generation
+- `src/25–27` — segmentation, guest intelligence, and scheduled automation
+- `src/28–30` — configuration, test fixtures, and smoke testing
+- `scripts/validate-project.js` — static project validation
+- `.github/workflows/validate.yml` — continuous validation
+- `docs/` — operator and deployment documentation
+
+## Local commands
+
+```bash
+npm run validate  # Static checks
+npm run pull      # Pull Apps Script project
+npm run push      # Validate and push
+npm run deploy    # Validate, push, and create a versioned deployment
+npm run open      # Open Apps Script editor
+```
 
 ## Data handling
 
-The system stores guest information in the selected Google Spreadsheet. Access must be restricted to authorized personnel and configured according to applicable privacy, retention, and consent requirements.
+The system stores guest information in the selected Google Spreadsheet. Restrict access to authorized personnel and configure privacy, retention, consent, and deletion practices according to applicable requirements.
 
-## Status
+Do not commit `.clasp.json`, OAuth tokens, guest exports, credentials, or production identifiers.
 
-Foundation release: `0.1.0`
+## Release status
+
+Production-capable application baseline: `1.0.0`.
