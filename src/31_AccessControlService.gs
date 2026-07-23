@@ -3,9 +3,9 @@ TGI.AccessControlService = (function () {
   var ROLES = { ADMIN: 'ADMIN', MANAGER: 'MANAGER', OPERATOR: 'OPERATOR', VIEWER: 'VIEWER' };
   var PERMISSIONS = {
     ADMIN: ['*'],
-    MANAGER: ['dashboard.rebuild', 'dashboard.view', 'insights.generate', 'insights.view', 'tasks.manage', 'guests.merge', 'exports.create', 'privacy.review', 'operations.manage', 'reservations.import', 'reports.view', 'integrations.manage', 'integrations.enqueue', 'integrations.process', 'marketing.manage', 'marketing.audience', 'marketing.launch', 'marketing.view', 'guest360.view', 'guest360.manage', 'cases.view', 'cases.manage', 'cases.escalate'],
-    OPERATOR: ['tasks.manage', 'contacts.create', 'guests.edit', 'insights.view', 'reservations.import', 'reports.view', 'integrations.enqueue', 'marketing.audience', 'marketing.view', 'guest360.view', 'guest360.manage', 'cases.view', 'cases.manage'],
-    VIEWER: ['dashboard.view', 'insights.view', 'reports.view', 'marketing.view', 'guest360.view', 'cases.view']
+    MANAGER: ['dashboard.rebuild', 'dashboard.view', 'insights.generate', 'insights.view', 'tasks.manage', 'guests.merge', 'exports.create', 'privacy.review', 'operations.manage', 'reservations.import', 'reports.view', 'integrations.manage', 'integrations.enqueue', 'integrations.process', 'marketing.manage', 'marketing.audience', 'marketing.launch', 'marketing.view', 'guest360.view', 'guest360.manage', 'cases.view', 'cases.manage', 'cases.escalate', 'workflows.view', 'workflows.manage', 'workflows.publish', 'workflows.process'],
+    OPERATOR: ['tasks.manage', 'contacts.create', 'guests.edit', 'insights.view', 'reservations.import', 'reports.view', 'integrations.enqueue', 'marketing.audience', 'marketing.view', 'guest360.view', 'guest360.manage', 'cases.view', 'cases.manage', 'workflows.view', 'workflows.publish'],
+    VIEWER: ['dashboard.view', 'insights.view', 'reports.view', 'marketing.view', 'guest360.view', 'cases.view', 'workflows.view']
   };
 
   function currentEmail() {
