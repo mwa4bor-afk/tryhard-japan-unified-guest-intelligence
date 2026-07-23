@@ -18,7 +18,7 @@ TGI.LocationService = (function () {
   }
 
   function save(input) {
-    TGI.AccessControlService.requirePermission('MANAGE_OPERATIONS');
+    TGI.AccessControlService.requirePermission('operations.manage');
     input = input || {};
     TGI.Util.assert(input.name, 'Location name is required.');
     var now = new Date();
