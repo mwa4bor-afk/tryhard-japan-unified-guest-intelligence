@@ -42,7 +42,9 @@ const requiredFiles = [
   '89_GoLiveService.gs',
   '90_GoLiveEntrypoints.gs',
   '91_BusinessContinuityService.gs',
-  '92_BusinessContinuityEntrypoints.gs'
+  '92_BusinessContinuityEntrypoints.gs',
+  '91_HypercareService.gs',
+  '92_HypercareEntrypoints.gs'
 ];
 
 requiredFiles.forEach((name) => {
@@ -88,7 +90,11 @@ if (fs.existsSync(src)) {
     'verifyTryHardGoLive',
     'initializeTryHardBusinessContinuity',
     'beginTryHardRecoveryDrill',
-    'completeTryHardRecoveryDrill'
+    'completeTryHardRecoveryDrill',
+    'initializeTryHardHypercare',
+    'startTryHardHypercare',
+    'recordTryHardHypercareCheckpoint',
+    'acceptTryHardHypercare'
   ];
   entrypoints.forEach((fn) => {
     const matches = combined.match(new RegExp(`function\\s+${fn}\\s*\\(`, 'g')) || [];
@@ -132,7 +138,8 @@ if (fs.existsSync(src)) {
     'ReleaseGovernanceService',
     'ValidationService',
     'GoLiveService',
-    'BusinessContinuityService'
+    'BusinessContinuityService',
+    'HypercareService'
   ].forEach((service) => {
     if (!new RegExp(`TGI\\.${service}\\s*=`).test(combined)) fail(`Missing service registration: TGI.${service}`);
   });
