@@ -12,7 +12,7 @@ TGI.EnterpriseReportingService = (function () {
   }
 
   function rebuild() {
-    TGI.AccessControlService.requirePermission('VIEW_REPORTS');
+    TGI.AccessControlService.requirePermission('reports.view');
     var ss=SpreadsheetApp.getActiveSpreadsheet();
     var sheet=ss.getSheetByName(SHEET)||ss.insertSheet(SHEET);
     sheet.clear();
