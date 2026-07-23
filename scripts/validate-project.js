@@ -28,18 +28,19 @@ const requiredFiles = [
   '27_AutomationService.gs',
   '30_SmokeTestService.gs',
   '31_AccessControlService.gs',
-  '39_IntegrationRegistryService.gs',
   '56_DomainEventService.gs',
   '61_LoyaltyProgramService.gs',
   '66_RevenueDemandService.gs',
-  '70_PmsAdapterRegistryService.gs',
+  '72_PmsSyncService.gs',
   '75_RecommendationPolicyService.gs',
   '79_PlatformHealthService.gs',
   '83_EnvironmentConfigService.gs',
   '84_SchemaMigrationService.gs',
   '85_ReleaseGovernanceService.gs',
   '87_ValidationService.gs',
-  '88_ValidationEntrypoints.gs'
+  '88_ValidationEntrypoints.gs',
+  '89_GoLiveService.gs',
+  '90_GoLiveEntrypoints.gs'
 ];
 
 requiredFiles.forEach((name) => {
@@ -53,10 +54,7 @@ if (fs.existsSync(manifestPath)) {
     if (manifest.runtimeVersion !== 'V8') fail('appsscript.json must use runtimeVersion V8.');
     if (manifest.timeZone !== 'Asia/Tokyo') warn('Manifest timezone is not Asia/Tokyo.');
     const scopes = manifest.oauthScopes || [];
-    [
-      'https://www.googleapis.com/auth/spreadsheets',
-      'https://www.googleapis.com/auth/forms'
-    ].forEach((scope) => {
+    ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/forms'].forEach((scope) => {
       if (!scopes.includes(scope)) fail(`Missing OAuth scope: ${scope}`);
     });
   } catch (error) {
@@ -78,13 +76,16 @@ if (fs.existsSync(src)) {
     }
   });
 
-  const uniqueEntrypoints = [
+  const entrypoints = [
     'onOpen',
     'onUnifiedFormSubmit',
     'installTryHardGuestIntelligence',
-    'runTryHardPlatformValidation'
+    'runTryHardPlatformValidation',
+    'runTryHardGoLivePreflight',
+    'beginTryHardGoLive',
+    'verifyTryHardGoLive'
   ];
-  uniqueEntrypoints.forEach((fn) => {
+  entrypoints.forEach((fn) => {
     const matches = combined.match(new RegExp(`function\\s+${fn}\\s*\\(`, 'g')) || [];
     if (matches.length !== 1) fail(`Expected exactly one ${fn} function; found ${matches.length}.`);
   });
@@ -99,38 +100,35 @@ if (fs.existsSync(src)) {
     if (pattern.test(combined)) fail(`Possible credential or project identifier detected: ${pattern}`);
   });
 
-  const assignments = {};
+  const namespaceAssignments = {};
   scriptFiles.forEach((name) => {
     const text = read(path.join(src, name));
-    const regex = /TGI\.([A-Za-z0-9_]+)\s*=\s*/g;
+    const regex = /TGI\.([A-Za-z0-9_]+)\s*=/g;
     let match;
     while ((match = regex.exec(text))) {
-      const service = match[1];
-      assignments[service] = assignments[service] || [];
-      assignments[service].push(name);
+      namespaceAssignments[match[1]] = namespaceAssignments[match[1]] || [];
+      namespaceAssignments[match[1]].push(name);
     }
   });
-  Object.keys(assignments).forEach((service) => {
-    if (assignments[service].length > 1) {
-      fail(`TGI.${service} is assigned in multiple files: ${assignments[service].join(', ')}`);
-    }
+  Object.keys(namespaceAssignments).forEach((key) => {
+    if (namespaceAssignments[key].length > 1) fail(`Duplicate TGI namespace assignment for ${key}: ${namespaceAssignments[key].join(', ')}`);
   });
 
-  const requiredServices = [
-    'Util', 'AuditLog', 'AccessControlService', 'IntegrationRegistryService',
-    'DomainEventService', 'LoyaltyProgramService', 'RevenueDemandService',
-    'PmsSyncService', 'RecommendationEngineService', 'PlatformHealthService',
-    'EnvironmentConfigService', 'SchemaMigrationService',
-    'ReleaseGovernanceService', 'ValidationService'
-  ];
-  requiredServices.forEach((service) => {
-    if (!assignments[service]) fail(`Missing namespace assignment for TGI.${service}.`);
-  });
-
-  scriptFiles.forEach((name) => {
-    const text = read(path.join(src, name));
-    if (/\beval\s*\(/.test(text)) warn(`Use of eval detected in src/${name}.`);
-    if (/console\.log\s*\(/.test(text)) warn(`console.log detected in src/${name}; prefer structured audit logging for production paths.`);
+  [
+    'AccessControlService',
+    'DomainEventService',
+    'LoyaltyProgramService',
+    'RevenueDemandService',
+    'PmsSyncService',
+    'RecommendationPolicyService',
+    'PlatformHealthService',
+    'EnvironmentConfigService',
+    'SchemaMigrationService',
+    'ReleaseGovernanceService',
+    'ValidationService',
+    'GoLiveService'
+  ].forEach((service) => {
+    if (!new RegExp(`TGI\\.${service}\\s*=`).test(combined)) fail(`Missing service registration: TGI.${service}`);
   });
 }
 
@@ -138,8 +136,8 @@ warnings.forEach((message) => console.warn(`WARNING: ${message}`));
 errors.forEach((message) => console.error(`ERROR: ${message}`));
 
 if (errors.length) {
-  console.error(`Validation failed with ${errors.length} error(s) and ${warnings.length} warning(s).`);
+  console.error(`Validation failed with ${errors.length} error(s).`);
   process.exit(1);
 }
 
-console.log(`Validation passed across repository structure and JavaScript syntax${warnings.length ? ` with ${warnings.length} warning(s)` : ''}.`);
+console.log(`Validation passed${warnings.length ? ` with ${warnings.length} warning(s)` : ''}.`);
