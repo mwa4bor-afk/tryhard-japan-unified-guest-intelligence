@@ -7,6 +7,9 @@ function onOpen() {
     .addItem('Install form-submit triggers', 'installTryHardFormTriggers')
     .addItem('Show form links', 'showTryHardFormLinks')
     .addSeparator()
+    .addItem('Run data-integrity check', 'runTryHardIntegrityCheck')
+    .addItem('Find duplicate guest candidates', 'showTryHardDuplicateCandidates')
+    .addSeparator()
     .addItem('Add sample guest', 'addSampleGuest')
     .addItem('Validate installation', 'validateTryHardInstallation')
     .addToUi();
@@ -57,18 +60,44 @@ function showTryHardFormLinks() {
 }
 
 function validateTryHardInstallation() {
-  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  var missing = TGI.Schema.names().filter(function (name) {
-    return !spreadsheet.getSheetByName(name);
-  });
-  if (missing.length) throw new Error('Missing sheets: ' + missing.join(', '));
-
+  var report = TGI.DataIntegrityService.validate();
   var registry = TGI.FormBuilder.getRegistry();
   var triggerCount = TGI.TriggerManager.listManagedTriggers().length;
-  var message = 'Workbook schema is valid.\nRegistered forms: ' + Object.keys(registry).length +
+  var message = (report.valid ? 'Workbook data integrity is valid.' : 'Workbook integrity issues were found.') +
+    '\nRegistered forms: ' + Object.keys(registry).length +
     '\nManaged form triggers: ' + triggerCount;
   SpreadsheetApp.getUi().alert(TGI.APP_NAME, message, SpreadsheetApp.getUi().ButtonSet.OK);
-  return { valid: true, formCount: Object.keys(registry).length, triggerCount: triggerCount };
+  return { valid: report.valid, integrity: report, formCount: Object.keys(registry).length, triggerCount: triggerCount };
+}
+
+function runTryHardIntegrityCheck() {
+  var report = TGI.DataIntegrityService.validate();
+  var summary = report.summary;
+  SpreadsheetApp.getUi().alert(
+    TGI.APP_NAME,
+    'Valid: ' + report.valid +
+      '\nMissing sheets: ' + summary.missing_sheets +
+      '\nHeader mismatches: ' + summary.header_mismatches +
+      '\nDuplicate keys: ' + summary.duplicate_primary_keys +
+      '\nOrphan references: ' + summary.orphaned_guest_references +
+      '\nInvalid guests: ' + summary.invalid_guest_records,
+    SpreadsheetApp.getUi().ButtonSet.OK
+  );
+  return report;
+}
+
+function showTryHardDuplicateCandidates() {
+  var candidates = TGI.DuplicateDetectionService.candidates(60);
+  var lines = candidates.slice(0, 20).map(function (candidate) {
+    return candidate.score + '% — ' + candidate.primary_candidate_id + ' / ' +
+      candidate.duplicate_candidate_id + ' (' + candidate.reasons.join(', ') + ')';
+  });
+  SpreadsheetApp.getUi().alert(
+    TGI.APP_NAME,
+    lines.length ? lines.join('\n') : 'No duplicate candidates found at the 60% threshold.',
+    SpreadsheetApp.getUi().ButtonSet.OK
+  );
+  return candidates;
 }
 
 function addSampleGuest() {
