@@ -6,15 +6,18 @@
   "scripts": {
     "validate": "node scripts/validate-project.js",
     "login": "clasp login",
+    "status": "clasp show-file-status",
     "pull": "clasp pull",
     "push": "npm run validate && clasp push",
-    "deploy": "npm run validate && clasp push && clasp deploy",
-    "open": "clasp open"
+    "version:create": "clasp create-version",
+    "deploy:create": "npm run validate && clasp push && clasp create-deployment",
+    "deploy:update": "npm run validate && clasp push && clasp update-deployment",
+    "open": "clasp open-script"
   },
   "devDependencies": {
-    "@google/clasp": "^2.4.2"
+    "@google/clasp": "3.3.0"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=22"
   }
 }
